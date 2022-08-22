@@ -19,6 +19,7 @@
 #include "globals.h"
 #include "matlabio.h"
 #include "mesh_base.h"
+#include "tensor_init.h"
 #include "timer.h"
 #include "utils.h"
 
@@ -387,8 +388,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   complex<double> Idxt, Idyt, kprop;
 
   char dimension_str[3];
-  const char fdtdgrid_elements[][15] = {"Exy", "Exz", "Eyx", "Eyz", "Ezx", "Ezy",      "Hxy",
-                                        "Hxz", "Hyx", "Hyz", "Hzx", "Hzy", "materials"};
   const char Cmaterial_elements[][10] = {"Cax", "Cay", "Caz", "Cbx", "Cby",
                                          "Cbz", "Ccx", "Ccy", "Ccz"};
   const char Dmaterial_elements[][10] = {"Dax", "Day", "Daz", "Dbx", "Dby", "Dbz"};
@@ -422,112 +421,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   //  jyfile = fopen("Jyz.txt","w");
   if (nrhs != 49) { throw runtime_error("Expected 49 inputs. Had " + to_string(nrhs)); }
 
-  if (nlhs != 31) { throw runtime_error("27 outputs required. Had " + to_string(nlhs)); }
+  if (nlhs != 31) { throw runtime_error("31 outputs required. Had " + to_string(nlhs)); }
 
   /*Get fdtdgrid*/
-  if (mxIsStruct(prhs[input_counter])) {
-    num_fields = mxGetNumberOfFields(prhs[input_counter]);
-
-    //check that all fields are present
-    if (num_fields != 13) {
-      throw runtime_error("fdtdgrid should have 13 members, it only has " + to_string(num_fields));
-    }
-    //now loop over the fields
-
-    for (int i = 0; i < num_fields; i++) {
-      //element = mxGetField(prhs[input_counter], 0, fdtdgrid_elements[i]);
-      element = mxGetField((mxArray *) prhs[input_counter], 0, fdtdgrid_elements[i]);
-      string element_name = fdtdgrid_elements[i];
-
-      if (mxIsDouble(element)) {
-        array_ptr_dbl = mxGetPr(element);
-      } else if (mxIsUint8(element)) {
-        array_ptr_uint8 = (unsigned char *) mxGetPr(element);
-      } else {
-        throw runtime_error("Incorrect data type in fdtdgrid. " + element_name);
-      }
-
-      ndims = mxGetNumberOfDimensions(element);
-      dimptr_out = mxGetDimensions(element);
-
-      if ((ndims != 2) && (ndims != 3)) {
-        throw runtime_error("field matrix %s should be 2- or 3-dimensional " + element_name);
-      }
-      //start
-      if (are_equal(fdtdgrid_elements[i], "Exy")) {
-        if (ndims == 2) E_s.xy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else {
-          //fprintf(stderr,"Dims Exy=%d %d %d\n",dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-          E_s.xy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-        }
-      } else if (are_equal(fdtdgrid_elements[i], "Exz")) {
-        if (ndims == 2) E_s.xz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          E_s.xz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Eyx")) {
-        if (ndims == 2) E_s.yx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          E_s.yx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Eyz")) {
-        if (ndims == 2) E_s.yz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          E_s.yz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Ezx")) {
-        if (ndims == 2) E_s.zx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          E_s.zx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Ezy")) {
-        if (ndims == 2) E_s.zy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          E_s.zy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Hxy")) {
-        if (ndims == 2) H_s.xy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          H_s.xy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Hxz")) {
-        if (ndims == 2) H_s.xz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          H_s.xz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Hyx")) {
-        if (ndims == 2) H_s.yx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          H_s.yx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Hyz")) {
-        if (ndims == 2) H_s.yz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          H_s.yz = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Hzx")) {
-        if (ndims == 2) H_s.zx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          H_s.zx = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "Hzy")) {
-        if (ndims == 2) H_s.zy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], 0);
-        else
-          H_s.zy = castMatlab3DArray(array_ptr_dbl, dimptr_out[0], dimptr_out[1], dimptr_out[2]);
-      } else if (are_equal(fdtdgrid_elements[i], "materials")) {
-
-        if (ndims == 2)
-          materials = castMatlab3DArrayUint8(array_ptr_uint8, dimptr_out[0], dimptr_out[1], 0);
-        else
-          materials = castMatlab3DArrayUint8(array_ptr_uint8, dimptr_out[0], dimptr_out[1],
-                                             dimptr_out[2]);
-        //save this for later when freeing memory
-        material_nlayers = dimptr_out[2];
-        I_tot = dimptr_out[0] - 1;//The _tot variables do NOT include the additional cell at the
-        J_tot = dimptr_out[1] - 1;//edge of the grid which is only partially used
-        if (ndims == 2) K_tot = 0;
-        else
-          K_tot = dimptr_out[2] - 1;
-      } else {
-        throw runtime_error("element fdtdgrid.%s not handled " + element_name);
-      }
-
-    }//end
-    input_counter++;
-  } else {
+  if (!mxIsStruct(prhs[input_counter])) {
     throw runtime_error("Argument " + to_string(input_counter) + " was expected to be a structure");
   }
+  init_split_field(prhs[input_counter]);
+
+  input_counter++;
+
   /*Got fdtdgrid*/
+
+
+
+
+
+
+
+
   //fprintf(stderr,"Got fdtdgrid\n");
   /*Get Cmaterials */
   if (mxIsStruct(prhs[input_counter])) {
@@ -1730,7 +1642,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       params.has_tdfdir = true;
       ex_td_field_exporter.allocate(Ni_tdf, Nk_tdf);
     }
-    
+
     input_counter++;
   }
   /*Got tdfdir*/
