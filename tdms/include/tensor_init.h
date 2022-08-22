@@ -5,5 +5,4 @@
 #include "field.h"
 
 
-void init_split_field(const mxArray *ptr, SplitField &E_s, SplitField &H_s);
-
+void init_grid_tensors(const mxArray *ptr, SplitField &E_s, SplitField &H_s, uint8_t*** &materials);

@@ -6,7 +6,7 @@
 using namespace std;
 
 
-void init_split_field(const mxArray *ptr, SplitField &E_s, SplitField &H_s){
+void init_grid_tensors(const mxArray *ptr, SplitField &E_s, SplitField &H_s, uint8_t*** &materials){
 
   const char elements[][15] = {"Exy", "Exz", "Eyx", "Eyz", "Ezx", "Ezy",
                                "Hxy", "Hxz", "Hyx", "Hyz", "Hzx", "Hzy", "materials"};
@@ -20,14 +20,7 @@ void init_split_field(const mxArray *ptr, SplitField &E_s, SplitField &H_s){
     auto element = mxGetField((mxArray *) ptr, 0, elements[i]);
     string element_name = elements[i];
 
-    double *array_ptr_dbl;
-    unsigned char *array_ptr_uint8;
-
-    if (mxIsDouble(element)) {
-      array_ptr_dbl = mxGetPr(element);
-    } else if (mxIsUint8(element)) {
-      array_ptr_uint8 = (unsigned char *) mxGetPr(element);
-    } else {
+    if (!mxIsDouble(element) && !mxIsUint8(element)) {
       throw runtime_error("Incorrect data type in fdtdgrid. " + element_name);
     }
 
@@ -42,39 +35,37 @@ void init_split_field(const mxArray *ptr, SplitField &E_s, SplitField &H_s){
     for (int j = 0; j < ndims; j++){
       dims[j] = raw_dims[j];
     }
-    
+
     if (are_equal(elements[i], "Exy")) {
-      E_s.xy = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      E_s.xy = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Exz")) {
-      E_s.xz = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      E_s.xz = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Eyx")) {
-      E_s.yx = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      E_s.yx = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Eyz")) {
-      E_s.yz = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      E_s.yz = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Ezx")) {
-      E_s.zx = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      E_s.zx = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Ezy")) {
-      E_s.zy = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      E_s.zy = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Hxy")) {
-      H_s.xy = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      H_s.xy = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Hxz")) {
-      H_s.xz = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      H_s.xz = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Hyx")) {
-      H_s.yx = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      H_s.yx = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Hyz")) {
-      H_s.yz = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      H_s.yz = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Hzx")) {
-      H_s.zx = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      H_s.zx = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Hzy")) {
-      H_s.zy = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
+      H_s.zy = castMatlab3DArray(mxGetPr(element), dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "materials")) {
 
-      materials = castMatlab3DArrayUint8(array_ptr_uint8, dims[0], dims[1], dims[2]);
-      //save this for later when freeing memory
-      material_nlayers = dims[2];
-      I_tot = dims[0] - 1;//The _tot variables do NOT include the additional cell at the
-      J_tot = dims[1] - 1;//edge of the grid which is only partially used
-      K_tot = dims[2] - 1;
+      materials = castMatlab3DArrayUint8((uint8_t *)mxGetPr(element), dims[0], dims[1], dims[2]);
+      E_s.I_tot = H_s.I_tot = dims[0] - 1; //The _tot variables do NOT include the additional cell
+      E_s.J_tot = H_s.J_tot = dims[1] - 1; // at the edge of the grid which is only partially used
+      E_s.K_tot = H_s.K_tot = dims[2] - 1;
     } else {
       throw runtime_error("element fdtdgrid.%s not handled " + element_name);
     }

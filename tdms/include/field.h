@@ -1,3 +1,4 @@
+#pragma once
 #include "stdexcept"
 #include "complex"
 #include "mat_io.h"

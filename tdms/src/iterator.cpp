@@ -288,7 +288,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   double *to_l, *hwhm, *omega_an, *dt;
   double maxfield = 0, tempfield;
   double *place_holder;
-  double *array_ptr_dbl;
   int intmatprops = 1;//means the material properties will be interpolated
   int intmethod;      //method of interpolating surface field quantities
 
@@ -327,11 +326,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   //end PSTD storage
 
-  unsigned char ***materials;
-  unsigned char *array_ptr_uint8;
+  uint8_t ***materials;
 
   int *Dxl, *Dxu, *Dyl, *Dyu, *Dzl, *Dzu, *Nt;
-  int i, j, k, material_nlayers, is_disp, is_cond, is_disp_ml = 0;
+  int i, j, k, is_disp, is_cond, is_disp_ml = 0;
   int k_loc;
   int tind;
   int input_counter = 0;
@@ -354,7 +352,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   int num_fields = 0;
   int ndims;
   int **structure, is_structure = 0;
-  int I_tot, J_tot, K_tot, K, max_IJK;
+  int K, max_IJK;
   int Nsteps = 0, dft_counter = 0;
   int **surface_vertices, n_surface_vertices = 0;
   int poutfile = 0;
@@ -427,8 +425,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (!mxIsStruct(prhs[input_counter])) {
     throw runtime_error("Argument " + to_string(input_counter) + " was expected to be a structure");
   }
-  init_split_field(prhs[input_counter]);
-
+  init_grid_tensors(prhs[input_counter], E_s, H_s, materials);
+  int I_tot = E_s.I_tot, J_tot = E_s.J_tot, K_tot = E_s.K_tot;
   input_counter++;
 
   /*Got fdtdgrid*/
@@ -6169,7 +6167,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   //fprintf(stderr,"Pos 21\n");
   if (is_structure) freeCastMatlab2DArrayInt(structure);
 
-  if (dimension == THREE) freeCastMatlab3DArrayUint8(materials, material_nlayers);
+  if (dimension == THREE) freeCastMatlab3DArrayUint8(materials, E_s.K_tot + 1);
   else
     freeCastMatlab3DArrayUint8(materials, 0);
     /*Free the additional memory which was allocated to store integers which were passed as doubles*/
