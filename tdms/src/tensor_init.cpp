@@ -32,16 +32,17 @@ void init_split_field(const mxArray *ptr, SplitField &E_s, SplitField &H_s){
     }
 
     auto ndims = mxGetNumberOfDimensions(element);
+    if (ndims != 2 && ndims != 3){
+      throw runtime_error("field matrix %s should be 2- or 3-dimensional " + element_name);
+    }
+
     auto raw_dims = mxGetDimensions(element);
     int dims[3] = {0, 0, 0};
 
     for (int j = 0; j < ndims; j++){
       dims[j] = raw_dims[j];
     }
-    if (ndims != 2 && ndims != 3){
-      throw runtime_error("field matrix %s should be 2- or 3-dimensional " + element_name);
-    }
-
+    
     if (are_equal(elements[i], "Exy")) {
       E_s.xy = castMatlab3DArray(array_ptr_dbl, dims[0], dims[1], dims[2]);
     } else if (are_equal(elements[i], "Exz")) {
