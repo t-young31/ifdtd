@@ -63,11 +63,13 @@ void init_grid_tensors(const mxArray *ptr, SplitField &E_s, SplitField &H_s, uin
     } else if (are_equal(elements[i], "materials")) {
 
       materials = castMatlab3DArrayUint8((uint8_t *)mxGetPr(element), dims[0], dims[1], dims[2]);
-      E_s.I_tot = H_s.I_tot = dims[0] - 1; //The _tot variables do NOT include the additional cell
+      E_s.I_tot = H_s.I_tot = dims[0] - 1; // The _tot variables do NOT include the additional cell
       E_s.J_tot = H_s.J_tot = dims[1] - 1; // at the edge of the grid which is only partially used
       E_s.K_tot = H_s.K_tot = dims[2] - 1;
     } else {
       throw runtime_error("element fdtdgrid.%s not handled " + element_name);
     }
   }
+
+  E_s.is_matlab_allocated = H_s.is_matlab_allocated = true;
 }

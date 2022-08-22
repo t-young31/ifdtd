@@ -6069,37 +6069,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (exi_present) freeCastMatlab3DArray(exi, *Nt);
   if (eyi_present) freeCastMatlab3DArray(eyi, *Nt);
 
-  //fprintf(stderr,"Pos 18\n");
-  if (dimension == THREE) {
-    freeCastMatlab3DArray(E_s.xy, K_tot + 1);
-    freeCastMatlab3DArray(E_s.xz, K_tot + 1);
-    freeCastMatlab3DArray(E_s.yx, K_tot + 1);
-    freeCastMatlab3DArray(E_s.yz, K_tot + 1);
-    freeCastMatlab3DArray(E_s.zx, K_tot + 1);
-    freeCastMatlab3DArray(E_s.zy, K_tot + 1);
-
-    freeCastMatlab3DArray(H_s.xy, K_tot + 1);
-    freeCastMatlab3DArray(H_s.xz, K_tot + 1);
-    freeCastMatlab3DArray(H_s.yx, K_tot + 1);
-    freeCastMatlab3DArray(H_s.yz, K_tot + 1);
-    freeCastMatlab3DArray(H_s.zx, K_tot + 1);
-    freeCastMatlab3DArray(H_s.zy, K_tot + 1);
-  } else {
-    freeCastMatlab3DArray(E_s.xy, 0);
-    freeCastMatlab3DArray(E_s.xz, 0);
-    freeCastMatlab3DArray(E_s.yx, 0);
-    freeCastMatlab3DArray(E_s.yz, 0);
-    freeCastMatlab3DArray(E_s.zx, 0);
-    freeCastMatlab3DArray(E_s.zy, 0);
-
-    freeCastMatlab3DArray(H_s.xy, 0);
-    freeCastMatlab3DArray(H_s.xz, 0);
-    freeCastMatlab3DArray(H_s.yx, 0);
-    freeCastMatlab3DArray(H_s.yz, 0);
-    freeCastMatlab3DArray(H_s.zx, 0);
-    freeCastMatlab3DArray(H_s.zy, 0);
-  }
-
   //fprintf(stderr,"Pos 19\n");
   //this should be fixed to take into account the change to steady state matrix size
   //when we have a PML layer of zero thickness
