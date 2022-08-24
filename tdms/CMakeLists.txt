@@ -67,6 +67,7 @@ set(SOURCES
     src/fields/split.cpp
     src/fields/td_field_exporter_2d.cpp
     src/argument_parser.cpp
+    src/dimensions.cpp
     src/fdtd_grid_initialiser.cpp
     src/grid_labels.cpp
     src/interface.cpp
@@ -78,6 +79,7 @@ set(SOURCES
     src/numeric.cpp
     src/numerical_derivative.cpp
     src/simulation_parameters.cpp
+    src/source.cpp
     src/tensor_init.cpp
     src/timer.cpp
     src/utils.cpp
