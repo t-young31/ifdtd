@@ -324,7 +324,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   int phasorinc[3];
   int num_fields = 0;
   int ndims;
-  int **structure, is_structure = 0;
   int K, max_IJK;
   int Nsteps = 0, dft_counter = 0;
   int **surface_vertices, n_surface_vertices = 0;
@@ -491,24 +490,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   auto ml = DispersiveMultiLayer(prhs[input_counter++]);
   
   /*Get structure*/
-  if (!mxIsEmpty(prhs[input_counter])) {
-    ndims = mxGetNumberOfDimensions(prhs[input_counter]);
-    dimptr_out = mxGetDimensions((mxArray *) prhs[input_counter]);
-    if (ndims != 2) {
-      //fprintf(stderr,"ndims: %d\n",ndims);
-      throw runtime_error("structure should be a 2D matrix");
-    }
-    if (dimptr_out[0] != 2 || dimptr_out[1] != (I_tot + 1))
-      throw runtime_error("structure should have dimension 2 x (I_tot+1) ");
-    //castMatlab2DArray(int *array, int nrows, int ncols)
-    structure = cast_matlab_2D_array((int *) mxGetPr(prhs[input_counter]), 2, I_tot + 1);
-
-    is_structure = 1;
-  } else
-    is_structure = 0;
-  input_counter++;
-
-  /*Got structure*/
+  auto structure = GratingStructure(prhs[input_counter++], I_tot);
+  params.is_structure = structure.has_elements();
 
   /*Get f_ex_vec*/
   if (!mxIsEmpty(prhs[input_counter])) {
@@ -1825,7 +1808,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 0; i < I_tot; i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -1948,7 +1931,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (j = 1; j < J_tot; j++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -2104,7 +2087,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 0; i < I_tot; i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -2221,7 +2204,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (k = 1; k < K_tot; k++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -2379,7 +2362,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 1; i < I_tot; i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure) {
+              if (params.is_structure) {
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -2497,7 +2480,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 1; i < I_tot; i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure) {
+              if (params.is_structure) {
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -2636,7 +2619,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 0; i < (I_tot + 1); i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -2750,7 +2733,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (k = 1; k < K_tot; k++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -2886,7 +2869,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 1; i < I_tot; i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -3006,7 +2989,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 1; i < I_tot; i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -3145,7 +3128,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 1; i < I_tot; i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -3231,7 +3214,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 0; i < (I_tot + 1); i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -3351,7 +3334,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (j = 1; j < J_tot; j++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -3489,7 +3472,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             for (i = 0; i < (I_tot + 1); i++) {
               rho = 0.;
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -3983,7 +3966,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot_bound; j++)
             for (i = 0; i < (I_tot + 1); i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4011,7 +3994,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (i = 0; i < (I_tot + 1); i++) {
             for (k = 0; k < K_tot; k++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4059,7 +4042,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot; j++)
             for (i = 0; i < (I_tot + 1); i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4089,7 +4072,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (i = 0; i < (I_tot + 1); i++) {
             for (j = 0; j < J_tot; j++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4155,7 +4138,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot_p1_bound; j++)
             for (i = 0; i < I_tot; i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4186,7 +4169,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot_p1_bound; j++) {
             for (i = 0; i < I_tot; i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4235,7 +4218,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot_p1_bound; j++)
             for (i = 0; i < I_tot; i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4269,7 +4252,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (i = 0; i < I_tot; i++) {
             for (k = 0; k < K_tot; k++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4335,7 +4318,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot; j++)
             for (i = 0; i < (I_tot + 1); i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4364,7 +4347,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < (J_tot + 1); j++)
             for (i = 0; i < I_tot; i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4406,7 +4389,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot; j++)
             for (i = 0; i < I_tot; i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4436,7 +4419,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (i = 0; i < I_tot; i++) {
             for (j = 0; j < J_tot; j++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4486,7 +4469,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot_bound; j++)
             for (i = 0; i < I_tot; i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -4516,7 +4499,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (j = 0; j < J_tot_bound; j++) {
             for (i = 0; i < I_tot; i++) {
               k_loc = k;
-              if (is_structure)
+              if (params.is_structure)
                 if (k > params.pml.Dzl && k < (params.pml.Dzl + K)) {
                   if ((k - structure[i][1]) < (K + params.pml.Dzl) && (k - structure[i][1]) > params.pml.Dzl)
                     k_loc = k - structure[i][1];
@@ -5145,9 +5128,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   free_cast_matlab_2D_array(iwave_lHx_Ibs);
   free_cast_matlab_2D_array(iwave_lHy_Rbs);
   free_cast_matlab_2D_array(iwave_lHy_Ibs);
-
-  //fprintf(stderr,"Pos 21\n");
-  if (is_structure) free_cast_matlab_2D_array(structure);
 
   if (params.dimension == THREE) free_cast_matlab_3D_array(materials, E_s.K_tot + 1);
   else
