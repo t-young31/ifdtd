@@ -281,7 +281,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   //these are used for boot strapping. There is currently no way of exporting this.
   double **iwave_lEx_Rbs, **iwave_lEy_Rbs, **iwave_lHx_Rbs, **iwave_lHy_Rbs, **iwave_lEx_Ibs,
           **iwave_lEy_Ibs, **iwave_lHx_Ibs, **iwave_lHy_Ibs;
-  double *to_l, *hwhm, *omega_an, *dt;
+  double *to_l, *hwhm, *dt;
   double maxfield = 0, tempfield;
   double *place_holder;
   int intmatprops = 1;//means the material properties will be interpolated
@@ -381,7 +381,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const char conductive_aux_elements[][10] = {"rho_x", "rho_y", "rho_z"};
   const char dispersive_aux_elements[][10] = {"alpha",   "beta",    "gamma",   "kappa_x", "kappa_y",
                                               "kappa_z", "sigma_x", "sigma_y", "sigma_z"};
-  const char grid_labels_fields[][15] = {"x_grid_labels", "y_grid_labels", "z_grid_labels"};
   const char fieldsample_elements[][2] = {"i", "j", "k", "n"};
   const char campssample_elements[][15] = {"vertices", "components"};
 
@@ -480,30 +479,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   input_counter++;
   //fprintf(stderr,"Got   grid_labels\n");
 
-  /*Get tvec_E - no longer used*/
-  /*
-    if(mxIsDouble(prhs[input_counter])){
-    tvec_E = mxGetPr(prhs[input_counter]);
-    input_counter++;
-    }
-    else{
-    sprintf(message_buffer, "Expected tvec_E to be a double vector");
-    mexfprintf(message_buffer);
-    }
-  */
-  /*Got tvec_E*/
-
   /*Get omega_an*/
-
-  if (mxIsDouble(prhs[input_counter])) {
-    omega_an = mxGetPr((mxArray *) prhs[input_counter]);
-    params.omega_an = *omega_an;
-    input_counter++;
-  } else {
-    throw runtime_error("expected omega_an to be a double");
-  }
-
-  /*Got omega_an*/
+  params.omega_an = double_in(prhs[input_counter], "omega_an");
+  input_counter++;
 
   /*Get to_l*/
 
@@ -875,7 +853,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   } else {
     N_f_ex_vec = 1;
     f_ex_vec = (double *) malloc(sizeof(double));
-    f_ex_vec[0] = omega_an[0] / 2. / dcpi;
+    f_ex_vec[0] = params.omega_an / 2. / dcpi;
   }
   input_counter++;
   /*Got f_ex_vec*/
@@ -1719,8 +1697,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   double dt_old;
   if (sourcemode == sm_steadystate) {
     dt_old = dt[0];
-    Nsteps_tmp = ceil(2. * dcpi / omega_an[0] / dt[0] * 3);
-    dt[0] = 2. * dcpi / omega_an[0] * 3 / Nsteps_tmp;
+    Nsteps_tmp = ceil(2. * dcpi / params.omega_an / dt[0] * 3);
+    dt[0] = 2. * dcpi / params.omega_an * 3 / Nsteps_tmp;
   }
 
   //fprintf(stderr,"Pre 16\n");
@@ -1728,7 +1706,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     fprintf(stderr, "Changing dt from %.10e to %.10e\n", dt_old, dt[0]);
   Nsteps = (int) lround(Nsteps_tmp);
   //fprintf(stderr,"Pre 17\n");
-  //Nsteps = (int)(floor(3*2.*dcpi/(omega_an[0]*dt[0])) + 1.);//the number of time steps in a sinusoidal period
+  //Nsteps = (int)(floor(3*2.*dcpi/(params.omega_an*dt[0])) + 1.);//the number of time steps in a sinusoidal period
   dft_counter = 0;
   //fprintf(stderr,"Pre 18\n");
   /*Nt should be an integer number of Nsteps in the case of steady-state operation*/
@@ -1943,8 +1921,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     if ((sourcemode == sm_steadystate) && (runmode == rm_complete) && exphasorsvolume) {
 
-      E.set_phasors(E_s, dft_counter - 1, *omega_an, *dt, Nsteps);
-      H.set_phasors(H_s, dft_counter, *omega_an, *dt, Nsteps);
+      E.set_phasors(E_s, dft_counter - 1, params.omega_an, *dt, Nsteps);
+      H.set_phasors(H_s, dft_counter, params.omega_an, *dt, Nsteps);
 
       if (exphasorssurface) {
         if (intphasorssurface) {
@@ -1967,8 +1945,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       if (TIME_EXEC) { timer.click(); }
 
       if ((tind - start_tind) % Np == 0) {
-        E.set_phasors(E_s, tind - 1, *omega_an, *dt, Npe);
-        H.set_phasors(H_s, tind, *omega_an, *dt, Npe);
+        E.set_phasors(E_s, tind - 1, params.omega_an, *dt, Npe);
+        H.set_phasors(H_s, tind, params.omega_an, *dt, Npe);
       }
       if (TIME_EXEC) { timer.click(); }
       //fprintf(stderr,"Pos 01b:\n");
@@ -2129,7 +2107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         extractPhasorsPlane(iwave_lEx_Rbs, iwave_lEx_Ibs, iwave_lEy_Rbs, iwave_lEy_Ibs,
                             iwave_lHx_Rbs, iwave_lHx_Ibs, iwave_lHy_Rbs, iwave_lHy_Ibs, E_s.xz,
                             E_s.yz, H_s.xz, H_s.yz, E_s.xy, E_s.yx, H_s.xy, H_s.yx, I_tot, J_tot,
-                            K0.index + 1, tind, *omega_an, *dt,
+                            K0.index + 1, tind, params.omega_an, *dt,
                             *Nt);//extract the phasors just above the line
       }
     //fprintf(stderr,"Pos 02c:\n");
@@ -3920,8 +3898,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     //update terms for self consistency across scattered/total interface - E updates##
     if (sourcemode == sm_steadystate) {//steadystate
-      complex<double> commonPhase = exp(-I * fmod(omega_an[0] * time_H, 2. * dcpi));
-      double commonAmplitude = linearRamp(time_H, 1. / (*omega_an / (2 * dcpi)), ramp_width);
+      complex<double> commonPhase = exp(-I * fmod(params.omega_an * time_H, 2. * dcpi));
+      double commonAmplitude = linearRamp(time_H, 1. / (params.omega_an / (2 * dcpi)), ramp_width);
       for (k = (K0.index); k <= (K1.index); k++)
         for (j = (J0.index); j <= (J1.index); j++) {
           if (I0.apply) {//Perform across I0
@@ -4217,27 +4195,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                           real((Ksource.real[0][i - (I0.index)][2] +
                                 I * Ksource.imag[0][i - (I0.index)][2]) *
                                (-1.0 * I) *
-                               exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2. * dcpi))) *
+                               exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2. * dcpi))) *
                           exp(-1.0 * dcpi *
                               pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-          //Eyz[(int)K0[0]][j][i] = Eyz[(int)K0[0]][j][i] - C.b.z[(int)K0[0]]*real((Ksource.real[0][i-((int)I0[0])][2] + I*Ksource.imag[0][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+          //Eyz[(int)K0[0]][j][i] = Eyz[(int)K0[0]][j][i] - C.b.z[(int)K0[0]]*real((Ksource.real[0][i-((int)I0[0])][2] + I*Ksource.imag[0][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
           if (is_cond)
             J_c.yz[K0.index][j][i] +=
                     rho_z[K0.index] * C.b.z[K0.index] *
                     real((Ksource.real[0][i - (I0.index)][2] +
                           I * Ksource.imag[0][i - (I0.index)][2]) *
-                         (-1.0 * I) * exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2. * dcpi))) *
+                         (-1.0 * I) * exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2. * dcpi))) *
                     exp(-1.0 * dcpi * pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-          //J_c.yz[(int)K0[0]][j][i] += rho_z[(int)K0[0]]*C.b.z[(int)K0[0]]*real((Ksource.real[0][i-((int)I0[0])][2] + I*Ksource.imag[0][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+          //J_c.yz[(int)K0[0]][j][i] += rho_z[(int)K0[0]]*C.b.z[(int)K0[0]]*real((Ksource.real[0][i-((int)I0[0])][2] + I*Ksource.imag[0][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
           if (params.is_disp_ml) {
             J_s.yz[K0.index][j][i] -=
                     ml_kappa_z[K0.index] * ml_gamma[K0.index] / (2. * dt[0]) *
                     C.b.z[K0.index] *
                     real((Ksource.real[0][i - (I0.index)][2] +
                           I * Ksource.imag[0][i - (I0.index)][2]) *
-                         (-1.0 * I) * exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2. * dcpi))) *
+                         (-1.0 * I) * exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2. * dcpi))) *
                     exp(-1.0 * dcpi * pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-            //Jyz[(int)K0[0]][j][i] -= ml_kappa_z[(int)K0[0]]*ml_gamma[(int)K0[0]]/(2.*dt[0])*C.b.z[(int)K0[0]]*real((Ksource.real[0][i-((int)I0[0])][2] + I*Ksource.imag[0][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+            //Jyz[(int)K0[0]][j][i] -= ml_kappa_z[(int)K0[0]]*ml_gamma[(int)K0[0]]/(2.*dt[0])*C.b.z[(int)K0[0]]*real((Ksource.real[0][i-((int)I0[0])][2] + I*Ksource.imag[0][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
           }
         }
       } else
@@ -4245,7 +4223,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           for (i = 0; i < (I_tot + 1); i++) {
             /*
         if(i==41 & j==41)
-        fprintf(stderr,"C.b.z = %.10e, Re(K) = %.10e, Im(K) = %.10e, time_H= %.10e, to_l[0]=%.10e, dz/light_v/2=%.10e, hwhm = %.10e, dE=%.10e\n",C.b.z[(int)K0[0]],Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2],Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2],time_H,to_l[0],dz/light_v/2,hwhm[0],C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0] + dz/light_v/2.)/(hwhm[0]),2)));
+        fprintf(stderr,"C.b.z = %.10e, Re(K) = %.10e, Im(K) = %.10e, time_H= %.10e, to_l[0]=%.10e, dz/light_v/2=%.10e, hwhm = %.10e, dE=%.10e\n",C.b.z[(int)K0[0]],Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2],Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2],time_H,to_l[0],dz/light_v/2,hwhm[0],C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0] + dz/light_v/2.)/(hwhm[0]),2)));
       */
             E_s.yz[K0.index][j][i] =
                     E_s.yz[K0.index][j][i] -
@@ -4253,19 +4231,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             real((Ksource.real[j - (J0.index)][i - (I0.index)][2] +
                                   I * Ksource.imag[j - (J0.index)][i - (I0.index)][2]) *
                                  (-1.0 * I) *
-                                 exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2. * dcpi))) *
+                                 exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2. * dcpi))) *
                             exp(-1.0 * dcpi *
                                 pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-            //Eyz[(int)K0[0]][j][i] = Eyz[(int)K0[0]][j][i] - C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+            //Eyz[(int)K0[0]][j][i] = Eyz[(int)K0[0]][j][i] - C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
             if (is_cond)
               J_c.yz[K0.index][j][i] +=
                       rho_z[K0.index] * C.b.z[K0.index] *
                       real((Ksource.real[j - (J0.index)][i - (I0.index)][2] +
                             I * Ksource.imag[j - (J0.index)][i - (I0.index)][2]) *
                            (-1.0 * I) *
-                           exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2. * dcpi))) *
+                           exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2. * dcpi))) *
                       exp(-1.0 * dcpi * pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-            //J_c.yz[(int)K0[0]][j][i] += rho_z[(int)K0[0]]*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+            //J_c.yz[(int)K0[0]][j][i] += rho_z[(int)K0[0]]*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
             if (params.is_disp_ml) {
               J_s.yz[K0.index][j][i] -=
                       ml_kappa_z[K0.index] * ml_gamma[K0.index] / (2. * dt[0]) *
@@ -4273,9 +4251,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                       real((Ksource.real[j - (J0.index)][i - (I0.index)][2] +
                             I * Ksource.imag[j - (J0.index)][i - (I0.index)][2]) *
                            (-1.0 * I) *
-                           exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2. * dcpi))) *
+                           exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2. * dcpi))) *
                       exp(-1.0 * dcpi * pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-              //Jyz[(int)K0[0]][j][i] -= ml_kappa_z[(int)K0[0]]*ml_gamma[(int)K0[0]]/(2.*dt[0])*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+              //Jyz[(int)K0[0]][j][i] -= ml_kappa_z[(int)K0[0]]*ml_gamma[(int)K0[0]]/(2.*dt[0])*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][2] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][2])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
             }
           }
       for (j = 0; j < (J_tot + 1); j++)
@@ -4286,32 +4264,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                           real((Ksource.real[j - (J0.index)][i - (I0.index)][3] +
                                 I * Ksource.imag[j - (J0.index)][i - (I0.index)][3]) *
                                (-1.0 * I) *
-                               exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2 * dcpi))) *
+                               exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2 * dcpi))) *
                           exp(-1.0 * dcpi *
                               pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-          //Exz[(int)K0[0]][j][i] = Exz[(int)K0[0]][j][i] + C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][3] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][3])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2 ));
+          //Exz[(int)K0[0]][j][i] = Exz[(int)K0[0]][j][i] + C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][3] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][3])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2 ));
           if (is_cond)
             J_c.xz[K0.index][j][i] -=
                     rho_z[K0.index] * C.b.z[K0.index] *
                     real((Ksource.real[j - (J0.index)][i - (I0.index)][3] +
                           I * Ksource.imag[j - (J0.index)][i - (I0.index)][3]) *
-                         (-1.0 * I) * exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2 * dcpi))) *
+                         (-1.0 * I) * exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2 * dcpi))) *
                     exp(-1.0 * dcpi * pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-          //J_c.xz[(int)K0[0]][j][i] -= rho_z[(int)K0[0]]*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][3] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][3])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2 ));
+          //J_c.xz[(int)K0[0]][j][i] -= rho_z[(int)K0[0]]*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][3] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][3])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2 ));
           if (params.is_disp_ml)
             J_s.xz[K0.index][j][i] +=
                     ml_kappa_z[K0.index] * ml_gamma[K0.index] / (2. * dt[0]) *
                     C.b.z[K0.index] *
                     real((Ksource.real[j - (J0.index)][i - (I0.index)][3] +
                           I * Ksource.imag[j - (J0.index)][i - (I0.index)][3]) *
-                         (-1.0 * I) * exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2 * dcpi))) *
+                         (-1.0 * I) * exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2 * dcpi))) *
                     exp(-1.0 * dcpi * pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-          //Jxz[(int)K0[0]][j][i] += ml_kappa_z[(int)K0[0]]*ml_gamma[(int)K0[0]]/(2.*dt[0])*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][3] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][3])*(-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2 ));
+          //Jxz[(int)K0[0]][j][i] += ml_kappa_z[(int)K0[0]]*ml_gamma[(int)K0[0]]/(2.*dt[0])*C.b.z[(int)K0[0]]*real((Ksource.real[j-((int)J0[0])][i-((int)I0[0])][3] + I*Ksource.imag[j-((int)J0[0])][i-((int)I0[0])][3])*(-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2 ));
         }
-      //fth = real((-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
-      H.ft = real((-1.0 * I) * exp(-I * fmod(omega_an[0] * (time_H - to_l[0]), 2. * dcpi))) *
+      //fth = real((-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+      H.ft = real((-1.0 * I) * exp(-I * fmod(params.omega_an * (time_H - to_l[0]), 2. * dcpi))) *
              exp(-1.0 * dcpi * pow((time_H - to_l[0] + dz / light_v / 2.) / (hwhm[0]), 2));
-      //fth = real((-1.0*I)*exp(-I*fmod(omega_an[0]*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
+      //fth = real((-1.0*I)*exp(-I*fmod(params.omega_an*(time_H - to_l[0]),2.*dcpi)))*exp( -1.0*dcpi*pow((time_H - to_l[0])/(hwhm[0]),2));
     }
     //fprintf(stderr,"Pos 10:\n");
 
@@ -4913,8 +4891,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     //fprintf(stderr,"Pos 11b:\n");
     //update terms for self consistency across scattered/total interface - E updates
     if (sourcemode == sm_steadystate) {//steadystate
-      complex<double> commonPhase = exp(-I * fmod(omega_an[0] * time_E, 2. * dcpi));
-      double commonAmplitude = linearRamp(time_E, 1. / (*omega_an / (2 * dcpi)), ramp_width);
+      complex<double> commonPhase = exp(-I * fmod(params.omega_an * time_E, 2. * dcpi));
+      double commonAmplitude = linearRamp(time_E, 1. / (params.omega_an / (2 * dcpi)), ramp_width);
       for (k = (K0.index); k <= (K1.index); k++)
         for (j = (J0.index); j <= (J1.index); j++) {
           if (I0.apply) {//Perform across I0
@@ -5056,7 +5034,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                           real((Ksource.real[0][i - (I0.index)][1] +
                                 I * Ksource.imag[0][i - (I0.index)][1]) *
                                (-1. * I) *
-                               exp(-I * fmod(omega_an[0] * (time_E - to_l[0]), 2 * dcpi))) *
+                               exp(-I * fmod(params.omega_an * (time_E - to_l[0]), 2 * dcpi))) *
                           exp(-1. * dcpi * pow((time_E - to_l[0]) / (hwhm[0]), 2.));
           //broadband source term
           if (eyi_present)
@@ -5071,7 +5049,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                           real((Ksource.real[0][i - (I0.index)][0] +
                                 I * Ksource.imag[0][i - (I0.index)][0]) *
                                (-1. * I) *
-                               exp(-I * fmod(omega_an[0] * (time_E - to_l[0]), 2 * dcpi))) *
+                               exp(-I * fmod(params.omega_an * (time_E - to_l[0]), 2 * dcpi))) *
                           exp(-1. * dcpi * pow((time_E - to_l[0]) / (hwhm[0]), 2.));
           //broadband source term
           if (exi_present)
@@ -5091,7 +5069,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             real((Ksource.real[j - (J0.index)][i - (I0.index)][1] +
                                   I * Ksource.imag[j - (J0.index)][i - (I0.index)][1]) *
                                  (-1. * I) *
-                                 exp(-I * fmod(omega_an[0] * (time_E - to_l[0]), 2 * dcpi))) *
+                                 exp(-I * fmod(params.omega_an * (time_E - to_l[0]), 2 * dcpi))) *
                             exp(-1. * dcpi * pow((time_E - to_l[0]) / (hwhm[0]), 2.));
             //broadband source term
             if (eyi_present)
@@ -5107,7 +5085,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             real((Ksource.real[j - (J0.index)][i - (I0.index)][0] +
                                   I * Ksource.imag[j - (J0.index)][i - (I0.index)][0]) *
                                  (-1. * I) *
-                                 exp(-I * fmod(omega_an[0] * (time_E - to_l[0]), 2 * dcpi))) *
+                                 exp(-I * fmod(params.omega_an * (time_E - to_l[0]), 2 * dcpi))) *
                             exp(-1. * dcpi * pow((time_E - to_l[0]) / (hwhm[0]), 2.));
             //broadband source term
             if (exi_present)
@@ -5116,7 +5094,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           }
         //fprintf(stderr,"Pos 11i\n");
       }
-      E.ft = real((-1. * I) * exp(-I * fmod(omega_an[0] * (time_E - to_l[0]), 2 * dcpi))) *
+      E.ft = real((-1. * I) * exp(-I * fmod(params.omega_an * (time_E - to_l[0]), 2 * dcpi))) *
              exp(-1. * dcpi * pow((time_E - to_l[0]) / (hwhm[0]), 2.));
       //fprintf(stderr,"Pos 11j\n");
     }
