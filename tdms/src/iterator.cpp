@@ -263,8 +263,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   double t0;
 
   double Ca, Cb, Cc;     //used by interpolation scheme
-  double *f_ex_vec;
-  int N_f_ex_vec;
   //the C and D vars for free space and pml
   double Enp1, Jnp1;
   //these are used for boot strapping. There is currently no way of exporting this.
@@ -290,7 +288,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           *pf_hyz, *pb_hzx, *pf_hzx, *pb_hzy, *pf_hzy;
   fftw_plan pex_t, pey_t;
   int N_e_x, N_e_y, N_e_z, N_h_x, N_h_y, N_h_z;
-  int exdetintegral;
   int Ndetmodes;
 
   complex<double> ***Dx_tilde, ***Dy_tilde;
@@ -494,39 +491,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   params.is_structure = structure.has_elements();
 
   /*Get f_ex_vec*/
-  if (!mxIsEmpty(prhs[input_counter])) {
-    ndims = mxGetNumberOfDimensions(prhs[input_counter]);
-    dimptr_out = mxGetDimensions((mxArray *) prhs[input_counter]);
-    fprintf(stderr, "f_ex_vec has ndims=%d, N=%d\n", ndims, dimptr_out[0]);
-
-    if (ndims != 2) { throw runtime_error("f_ex_vec should be an array with N>0 elements"); }
-    if (!((dimptr_out[0] == 1) || (dimptr_out[1] == 1)))
-      throw runtime_error("f_ex_vec should be an array with N>0 elements");
-    if (dimptr_out[0] > dimptr_out[1]) N_f_ex_vec = dimptr_out[0];
-    else
-      N_f_ex_vec = dimptr_out[1];
-    f_ex_vec = (double *) mxGetPr((mxArray *) prhs[input_counter]);
-  } else {
-    N_f_ex_vec = 1;
-    f_ex_vec = (double *) malloc(sizeof(double));
-    f_ex_vec[0] = params.omega_an / 2. / dcpi;
-  }
-  input_counter++;
-  /*Got f_ex_vec*/
-
+  auto f_ex_vec = FrequencyExtractVector(prhs[input_counter++], params.omega_an);
+  
   /*Get exdetintegral*/
   if (!mxIsEmpty(prhs[input_counter])) {
-    if (mxGetNumberOfElements(prhs[input_counter]) != 1)
-      fprintf(stderr, "exdetintegral has %d elements, it should only have 1.\n",
-              (int) mxGetNumberOfElements(prhs[input_counter]));
-    exdetintegral = (int) *(mxGetPr((mxArray *) prhs[input_counter]));
-  } else
-    exdetintegral = 0;
+    params.exdetintegral = bool_cast_from_double_in(prhs[input_counter], "exdetintegral");
+  }
   input_counter++;
-  /*Got exdetintegral*/
 
 
-  if (exdetintegral == 1) {
+  if (params.exdetintegral) {
     /*Get f_vec*/
     if (!mxIsEmpty(prhs[input_counter])) {
       if (mxIsStruct(prhs[input_counter])) {
@@ -844,7 +818,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   refind = sqrt(1. / (freespace_Cbx[0] / params.dt * dx) / eo);
   fprintf(stderr, "refind=%e\n", refind);
   /*Setup temporary storage for detector sensitivity evaluation*/
-  if (exdetintegral) {
+  if (params.exdetintegral) {
     //These are 2D matrices in row-major order
     Ex_t = (fftw_complex *) fftw_malloc((J_tot - params.pml.Dyl - params.pml.Dyu) * (I_tot - params.pml.Dxl - params.pml.Dxu) *
                                         sizeof(fftw_complex));
@@ -866,7 +840,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
 
   double f_max = 0.;
-  for (int ifx = 0; ifx < N_f_ex_vec; ifx++)
+  for (int ifx = 0; ifx < f_ex_vec.size(); ifx++)
     if (f_ex_vec[ifx] > f_max) f_max = f_ex_vec[ifx];
 
 
@@ -987,9 +961,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           2.5 * params.dt * f_max);
   //fprintf(stderr,"Pre 01\n");
   //initialise E_norm and H_norm
-  auto E_norm = (complex<double> *) malloc(N_f_ex_vec * sizeof(complex<double>));
-  auto H_norm = (complex<double> *) malloc(N_f_ex_vec * sizeof(complex<double>));
-  for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+  auto E_norm = (complex<double> *) malloc(f_ex_vec.size() * sizeof(complex<double>));
+  auto H_norm = (complex<double> *) malloc(f_ex_vec.size() * sizeof(complex<double>));
+  for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
     E_norm[ifx] = 0.;
     H_norm[ifx] = 0.;
   }
@@ -1022,7 +996,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     dims[0] = n_surface_vertices;
     dims[1] = 6;//one for each component of field
-    dims[2] = N_f_ex_vec;
+    dims[2] = f_ex_vec.size();
 
     mx_surface_amplitudes =
             mxCreateNumericArray(ndims, (const mwSize *) dims, mxDOUBLE_CLASS, mxCOMPLEX);
@@ -1179,7 +1153,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     H.zero();
   }
   //fprintf(stderr,"Pre 11\n");
-  if (exdetintegral && params.run_mode == RunMode::complete) {
+  if (params.exdetintegral && params.run_mode == RunMode::complete) {
     ndims = 2;
     dims[0] = 1;
     dims[1] = 1;
@@ -1188,7 +1162,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     ndims = 2;
     dims[0] = Ndetmodes;
-    dims[1] = N_f_ex_vec;
+    dims[1] = f_ex_vec.size();
 
     mx_Idx = mxCreateNumericArray(ndims, (const mwSize *) dims, mxDOUBLE_CLASS, mxCOMPLEX);
     Idx_re = cast_matlab_2D_array(mxGetPr(mx_Idx), dims[0], dims[1]);
@@ -1198,10 +1172,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     Idy_re = cast_matlab_2D_array(mxGetPr(mx_Idy), dims[0], dims[1]);
     Idy_im = cast_matlab_2D_array(mxGetPi(mx_Idy), dims[0], dims[1]);
 
-    Idx = (complex<double> **) malloc(sizeof(complex<double> *) * N_f_ex_vec);
-    Idy = (complex<double> **) malloc(sizeof(complex<double> *) * N_f_ex_vec);
+    Idx = (complex<double> **) malloc(sizeof(complex<double> *) * f_ex_vec.size());
+    Idy = (complex<double> **) malloc(sizeof(complex<double> *) * f_ex_vec.size());
 
-    for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+    for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
       Idx[ifx] = (complex<double> *) malloc(sizeof(complex<double>) * Ndetmodes);
       Idy[ifx] = (complex<double> *) malloc(sizeof(complex<double>) * Ndetmodes);
       for (int im = 0; im < Ndetmodes; im++) {
@@ -1211,7 +1185,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
     for (int im = 0; im < Ndetmodes; im++) {
-      for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+      for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
         Idx_re[ifx][im] = 0.;
         Idx_im[ifx][im] = 0.;
         Idy_re[ifx][im] = 0.;
@@ -1329,7 +1303,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     ndims = 3;
     dims[0] = nvertices;
     dims[1] = ncomponents;
-    dims[2] = N_f_ex_vec;
+    dims[2] = f_ex_vec.size();
     mx_camplitudes = mxCreateNumericArray(ndims, (const mwSize *) dims, mxDOUBLE_CLASS, mxCOMPLEX);
     camplitudesR = cast_matlab_3D_array(mxGetPr(mx_camplitudes), dims[0], dims[1], dims[2]);
     camplitudesI = cast_matlab_3D_array(mxGetPi(mx_camplitudes), dims[0], dims[1], dims[2]);
@@ -1568,8 +1542,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       H.zero();
 
       if (params.exphasorssurface) {
-        initialiseDouble3DArray(surface_EHr, n_surface_vertices, 6, N_f_ex_vec);
-        initialiseDouble3DArray(surface_EHi, n_surface_vertices, 6, N_f_ex_vec);
+        initialiseDouble3DArray(surface_EHr, n_surface_vertices, 6, f_ex_vec.size());
+        initialiseDouble3DArray(surface_EHi, n_surface_vertices, 6, f_ex_vec.size());
       }
       //cleanphasors
     }
@@ -1582,13 +1556,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
       if (params.exphasorssurface) {
         if (params.intphasorssurface) {
-          for (int ifx = 0; ifx < N_f_ex_vec; ifx++)
+          for (int ifx = 0; ifx < f_ex_vec.size(); ifx++)
             extractPhasorsSurface(surface_EHr[ifx], surface_EHi[ifx], H_s, E_s, surface_vertices,
                                   n_surface_vertices, dft_counter, f_ex_vec[ifx] * 2 * dcpi, params.dt,
                                   Nsteps, params.dimension, J_tot, intmethod);
           dft_counter++;
         } else {
-          for (int ifx = 0; ifx < N_f_ex_vec; ifx++)
+          for (int ifx = 0; ifx < f_ex_vec.size(); ifx++)
             extractPhasorsSurfaceNoInterpolation(surface_EHr[ifx], surface_EHi[ifx], H_s, E_s,
                                                  surface_vertices, n_surface_vertices, dft_counter,
                                                  f_ex_vec[ifx] * 2 * dcpi, params.dt, Nsteps, params.dimension,
@@ -1642,12 +1616,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (params.source_mode == SourceMode::pulsed && params.run_mode == RunMode::complete && params.exphasorssurface) {
       if ((tind - params.start_tind) % Np == 0) {
         if (params.intphasorssurface)
-          for (int ifx = 0; ifx < N_f_ex_vec; ifx++)
+          for (int ifx = 0; ifx < f_ex_vec.size(); ifx++)
             extractPhasorsSurface(surface_EHr[ifx], surface_EHi[ifx], H_s, E_s, surface_vertices,
                                   n_surface_vertices, tind, f_ex_vec[ifx] * 2 * dcpi, params.dt, Npe,
                                   params.dimension, J_tot, intmethod);
         else
-          for (int ifx = 0; ifx < N_f_ex_vec; ifx++)
+          for (int ifx = 0; ifx < f_ex_vec.size(); ifx++)
             extractPhasorsSurfaceNoInterpolation(
                     surface_EHr[ifx], surface_EHi[ifx], H_s, E_s, surface_vertices,
                     n_surface_vertices, tind, f_ex_vec[ifx] * 2 * dcpi, params.dt, Npe, params.dimension, J_tot);
@@ -1661,7 +1635,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         if (nvertices > 0) {
           //fprintf(stderr,"loc 03\n");
           //	  fprintf(stderr,"EPV 01\n");
-          for (int ifx = 0; ifx < N_f_ex_vec; ifx++)
+          for (int ifx = 0; ifx < f_ex_vec.size(); ifx++)
             extractPhasorsVertices(camplitudesR[ifx], camplitudesI[ifx], H_s, E_s, vertices,
                                    nvertices, components, ncomponents, tind,
                                    f_ex_vec[ifx] * 2 * dcpi, params.dt, Npe, params.dimension, J_tot, intmethod);
@@ -1671,7 +1645,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 
     //fprintf(stderr,"Pos 02a:\n");
-    if (params.source_mode == SourceMode::pulsed && params.run_mode == RunMode::complete && exdetintegral) {
+    if (params.source_mode == SourceMode::pulsed && params.run_mode == RunMode::complete && params.exdetintegral) {
       if ((tind - params.start_tind) % Np == 0) {
         //First need to sum up the Ex and Ey values on a plane ready for FFT, remember that Ex_t and Ey_t are in row-major format whilst Exy etc. are in column major format
         for (j = params.pml.Dyl; j < (J_tot - params.pml.Dyu); j++)
@@ -1710,7 +1684,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                              cphaseTermE)
           {
 #pragma omp for
-            for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+            for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
               //wavelength in air
               lambda_an_t = light_v / f_ex_vec[ifx];
               //fprintf(stdout,"lambda_an_t = %e, light_v = %e, z_obs = %e\n",lambda_an_t,light_v,z_obs);
@@ -4756,12 +4730,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
     if (TIME_EXEC) { timer.click(); }
 
-    if (params.exphasorssurface || params.exphasorsvolume || exdetintegral || (nvertices > 0)) {
+    if (params.exphasorssurface || params.exphasorsvolume || params.exdetintegral || (nvertices > 0)) {
       if (params.source_mode == SourceMode::steadystate) {
         E.add_to_angular_norm(tind, Nsteps, params);
         H.add_to_angular_norm(tind, Nsteps, params);
 
-        for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+        for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
           extractPhasorENorm(&E_norm[ifx], E.ft, tind, f_ex_vec[ifx] * 2 * dcpi, params.dt, Nsteps);
           extractPhasorHNorm(&H_norm[ifx], H.ft, tind, f_ex_vec[ifx] * 2 * dcpi, params.dt, Nsteps);
         }
@@ -4771,7 +4745,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           E.add_to_angular_norm(tind, Npe, params);
           H.add_to_angular_norm(tind, Npe, params);
 
-          for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+          for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
             extractPhasorENorm(&E_norm[ifx], E.ft, tind, f_ex_vec[ifx] * 2 * dcpi, params.dt, Npe);
             extractPhasorHNorm(&H_norm[ifx], H.ft, tind, f_ex_vec[ifx] * 2 * dcpi, params.dt, Npe);
           }
@@ -4855,14 +4829,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   //fprintf(stderr,"Pos 13\n");
   if (params.run_mode == RunMode::complete && params.exphasorssurface)
-    for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+    for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
       normaliseSurface(surface_EHr[ifx], surface_EHi[ifx], surface_vertices, n_surface_vertices,
                        E_norm[ifx], H_norm[ifx]);
       //fprintf(stderr,"E_norm[%d]: %e %e\n",ifx,real(E_norm[ifx]),imag(E_norm[ifx]));
     }
 
   if (params.run_mode == RunMode::complete && (nvertices > 0))
-    for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+    for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
       normaliseVertices(camplitudesR[ifx], camplitudesI[ifx], vertices, nvertices, components,
                         ncomponents, E_norm[ifx], H_norm[ifx]);
       fprintf(stderr, "E_norm[%d]: %e %e\n", ifx, real(E_norm[ifx]), imag(E_norm[ifx]));
@@ -4870,9 +4844,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 
   //fprintf(stderr,"Pos 14\n");
-  if (params.source_mode == SourceMode::pulsed && params.run_mode == RunMode::complete && exdetintegral) {
+  if (params.source_mode == SourceMode::pulsed && params.run_mode == RunMode::complete && params.exdetintegral) {
     for (int im = 0; im < Ndetmodes; im++)
-      for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+      for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
         Idx[ifx][im] = Idx[ifx][im] / E_norm[ifx];
         Idy[ifx][im] = Idy[ifx][im] / E_norm[ifx];
 
@@ -5048,25 +5022,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /*Free the additional data structures used to cast the matlab arrays*/
   if (params.exphasorssurface && params.run_mode == RunMode::complete) {
     free_cast_matlab_2D_array(surface_vertices);
-    free_cast_matlab_3D_array(surface_EHr, N_f_ex_vec);
-    free_cast_matlab_3D_array(surface_EHi, N_f_ex_vec);
+    free_cast_matlab_3D_array(surface_EHr, f_ex_vec.size());
+    free_cast_matlab_3D_array(surface_EHi, f_ex_vec.size());
 
     mxDestroyArray(mx_surface_vertices);
   }
 
   if (nvertices > 0) {
     free_cast_matlab_2D_array(vertices);
-    free_cast_matlab_3D_array(camplitudesR, N_f_ex_vec);
-    free_cast_matlab_3D_array(camplitudesI, N_f_ex_vec);
+    free_cast_matlab_3D_array(camplitudesR, f_ex_vec.size());
+    free_cast_matlab_3D_array(camplitudesI, f_ex_vec.size());
   }
 
-  if (exdetintegral == 1) {
+  if (params.exdetintegral) {
     free_cast_matlab_2D_array(Pupil);
     free_cast_matlab_2D_array(Idx_re);
     free_cast_matlab_2D_array(Idx_im);
     free_cast_matlab_2D_array(Idy_re);
     free_cast_matlab_2D_array(Idy_im);
-    for (int ifx = 0; ifx < N_f_ex_vec; ifx++) {
+    for (int ifx = 0; ifx < f_ex_vec.size(); ifx++) {
       free(Idx[ifx]);
       free(Idy[ifx]);
     }
