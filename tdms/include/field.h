@@ -1,3 +1,4 @@
+#pragma once
 #include <complex>
 #include <stdexcept>
 #include "mat_io.h"
@@ -89,6 +90,11 @@ public:
     double ***yz = nullptr;
     double ***zx = nullptr;
     double ***zy = nullptr;
+
+    /**
+     * Has this split field been initialised from MATLAB? If it has then use a different free
+     */
+    bool is_matlab_allocated = false;
 
     /**
      * Default no arguments constructor
