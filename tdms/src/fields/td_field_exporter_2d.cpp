@@ -2,11 +2,11 @@
 #include "field.h"
 
 
-void TDFieldExporter2D::allocate(int I, int J) {
+void TDFieldExporter2D::allocate(int nI, int nJ) {
 
-  mwSize dims[2] = {I, J};
+  mwSize dims[2] = {nI, nJ};
   matlab_array = mxCreateNumericArray(2, (const mwSize *)dims, mxDOUBLE_CLASS, mxREAL);
-  array = castMatlab2DArray(mxGetPr((mxArray *) matlab_array), I, J);
+  array = castMatlab2DArray(mxGetPr((mxArray *) matlab_array), nI, nJ);
 }
 
 TDFieldExporter2D::~TDFieldExporter2D() {
@@ -16,18 +16,15 @@ TDFieldExporter2D::~TDFieldExporter2D() {
 
 void TDFieldExporter2D::export_field(SplitField& F, int stride, int iteration) const{
 
-  int ic = 0;
-
-  for (int i = 0; i < F.I_tot; i++) {
-    int kc = 0;
-    if ((i % stride) == 0) {
-      for (int k = 0; k < F.K_tot; k++)
-        if ((k % stride) == 0) {
-          array[kc++][ic] = F.xy[k][0][i] + F.xz[k][0][i];
-        }
-      ic++;
+  int i = 0;
+  while (i < F.I_tot) {
+      int k = 0;
+      while (k < F.K_tot){
+        array[k][i] = F.xy[k][0][i] + F.xz[k][0][i];
+        k += stride;
+      }
+      i += stride;
     }
-  }
 
   char toutputfilename[512];
   sprintf(toutputfilename, "%s/ex_%06d.mat", folder_name, iteration);

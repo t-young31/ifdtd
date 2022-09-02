@@ -21,7 +21,7 @@ void initialiseDouble2DArray(double **inArray, int i_lim, int j_lim);
 
 double linearRamp(double t, double period, double rampwidth);
 
-double checkPhasorConvergence(ElectricField &A, ElectricField &B, ElectricSplitField &E_s);
+double checkPhasorConvergence(ElectricField &A, ElectricField &B);
 
 void copyPhasors(ElectricField &from, ElectricField &to, int nelements);
 

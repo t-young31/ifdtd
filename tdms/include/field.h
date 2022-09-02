@@ -66,6 +66,9 @@ public:
 
     virtual std::complex<double> phasor_norm(double f, int n, double omega, double dt, int Nt) = 0;
 
+    /**
+     * Normalise. This will modify the values of the field in place
+     */
     void normalise_volume();
 };
 
@@ -186,9 +189,9 @@ public:
   char* folder_name = nullptr;
 
   /**
-   * Allocate the arrays to hol the field
+   * Allocate the arrays to hold the field
    */
-  void allocate(int I, int J);
+  void allocate(int nI, int nJ);
 
   /**
    * Export/save a field

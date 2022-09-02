@@ -2570,7 +2570,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if ((dft_counter == Nsteps) && (runmode == rm_complete) && (sourcemode == sm_steadystate) &&
         exphasorsvolume) {//runmode=complete,sourcemode=steadystate
       dft_counter = 0;
-      double tol = checkPhasorConvergence(E, E_copy, E_s);
+      double tol = checkPhasorConvergence(E, E_copy);
 
       //      mexPrintf("tol: %.5e \n",tol);
       fprintf(stderr, "tol: %.5e \n", tol);
@@ -6959,9 +6959,9 @@ double linearRamp(double t, double period, double rampwidth) {
     return t / (period * rampwidth);
 }
 
-double checkPhasorConvergence(ElectricField &E, ElectricField &E_copy, ElectricSplitField &E_s) {
+double checkPhasorConvergence(ElectricField &E, ElectricField &E_copy) {
 
-  double maxabs = 0., maxdiff = 0.;
+  double max_abs = 0., max_abs_diff = 0.;
 
   //find the largest maximum absolute value the largest difference (in absolute value) between phasors
   for (int k = 0; k < E.K_tot; k++)
@@ -6972,18 +6972,11 @@ double checkPhasorConvergence(ElectricField &E, ElectricField &E_copy, ElectricS
             auto E_ijk = E.real(c)[k][j][i] + I * E.imag(c)[k][j][i];
             auto E_copy_ijk = E_copy.real(c)[k][j][i] + I * E_copy.imag(c)[k][j][i];
 
-            auto temp_abs = abs(E_ijk);  // |Re(E_x) + i Im(E_x)|
-            if (temp_abs > maxabs){
-              maxabs = temp_abs;
-            }
-
-            auto temp_diff = abs(E_ijk - E_copy_ijk);
-            if (temp_diff > maxdiff){
-              maxdiff = temp_diff;
-            }
+            max_abs = max(max_abs, abs(E_ijk));  // max(max_abs, |Re(E_x) + i Im(E_x)|)
+            max_abs_diff = max(max_abs_diff, abs(E_ijk - E_copy_ijk));
           }
 
-  return maxdiff / maxabs;
+  return max_abs_diff / max_abs;
 }
 
 /*Copy the phasors from E to E_copy */
