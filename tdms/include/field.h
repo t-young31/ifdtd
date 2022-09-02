@@ -64,6 +64,8 @@ public:
     void add_to_angular_norm(int n, int Nt, SimulationParameters &params);
 
     virtual std::complex<double> phasor_norm(double f, int n, double omega, double dt, int Nt) = 0;
+
+    void normalise_volume();
 };
 
 
