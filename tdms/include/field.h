@@ -71,6 +71,11 @@ public:
      * Normalise. This will modify the values of the field in place
      */
     void normalise_volume();
+
+    /**
+     * Zero all components of the real and imaginary parts of the field
+     */
+    void zero();
 };
 
 
