@@ -36,7 +36,7 @@ struct xyz_arrays{
 
 
 /**
- * A complex field defined over a grid. Has real and imaginary components
+ * A complex vector field defined over a grid. Has three real and imaginary vector components
  * at each (x, y, z) grid point
  */
 class Field : public Grid{
