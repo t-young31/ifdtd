@@ -35,3 +35,10 @@ void Field::zero() {
           for (int i = 0; i < I_tot; i++)
               arr(c)[k][j][i] = 0.;
 }
+
+Field::~Field() {
+
+  for (auto &arr : {real, imag})
+    for (char c : {'x', 'y', 'z'})
+      freeCastMatlab3DArray(arr(c), K_tot);
+}
