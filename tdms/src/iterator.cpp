@@ -255,7 +255,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 
   auto E = ElectricField();
   auto H = MagneticField();
-  auto E_copy = ElectricField();
+  auto E_copy = ElectricField();  // Used to check convergence with E - E_copy
 
   double **ex_tdf;
   mxArray *ex_tdf_array;
@@ -4885,7 +4885,7 @@ J_c.zy[k][j][i] -= rho*(Enp1 + E_s.zy[k][j][i]);
     //update terms for self consistency across scattered/total interface - E updates##
     if(sourcemode == sm_steadystate){//steadystate
       auto commonPhase = exp(-I*fmod(omega_an[0]*time_H,2.*dcpi));
-      commonAmplitude = linearRamp(time_H, 1./(*omega_an/(2*dcpi)), ramp_width);
+      auto commonAmplitude = linearRamp(time_H, 1./(*omega_an/(2*dcpi)), ramp_width);
       for(k=((int)K0[0]);k<=((int)K1[0]);k++)
 	for(j=((int)J0[0]);j<=((int)J1[0]);j++){
 	  if( (int)I0[1] ){//Perform across I0
@@ -5645,7 +5645,7 @@ J_c.zy[k][j][i] -= rho*(Enp1 + E_s.zy[k][j][i]);
     //update terms for self consistency across scattered/total interface - E updates
     if(sourcemode == sm_steadystate){//steadystate
       complex<double> commonPhase = exp(-I*fmod(omega_an[0]*time_E,2.*dcpi));
-      commonAmplitude = linearRamp(time_E, 1./(*omega_an/(2*dcpi)), ramp_width);
+      auto commonAmplitude = linearRamp(time_E, 1./(*omega_an/(2*dcpi)), ramp_width);
       for(k=((int)K0[0]);k<=((int)K1[0]);k++)
 	for(j=((int)J0[0]);j<=((int)J1[0]);j++){
 	  if( (int)I0[1] ){//Perform across I0

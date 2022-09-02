@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(tdms LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 14)
 include(CTest)
 
 # Allow RPATH on mac
@@ -60,7 +61,7 @@ endif()
 
 # TDMS target -----------------------------------------------------------------
 set(SOURCES
-    src/fields/current_density.cpp
+    src/fields/base.cpp
     src/fields/electric.cpp
     src/fields/magnetic.cpp
     src/argument_parser.cpp
