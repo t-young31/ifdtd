@@ -1,5 +1,6 @@
 #include <complex>
-#include "stdexcept"
+#include <stdexcept>
+#include "mat_io.h"
 #include "simulation_parameters.h"
 
 
@@ -172,4 +173,31 @@ class MagneticField: public Field{
 
 private:
     std::complex<double> phasor_norm(double f, int n, double omega, double dt, int Nt) override;
+};
+
+/**
+ * Structure to hold a field and allow saving it to a file
+ */
+class TDFieldExporter2D{
+
+public:
+  mxArray* matlab_array = nullptr;
+  double** array = nullptr;
+  char* folder_name = nullptr;
+
+  /**
+   * Allocate the arrays to hol the field
+   */
+  void allocate(int I, int J);
+
+  /**
+   * Export/save a field
+   *
+   * @param F Field to save
+   * @param stride Interval to compute the field component at
+   * @param iteration Iteration number of the main loop. Used in the filename
+   */
+  void export_field(SplitField& F, int stride, int iteration) const;
+
+  ~TDFieldExporter2D();
 };
