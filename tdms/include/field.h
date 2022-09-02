@@ -55,11 +55,6 @@ public:
     virtual std::complex<double> phasor_norm(double f, int n, double omega, double dt, int Nt) = 0;
 };
 
-/**
- * A split field introduces relations to generate the total values of
- * the field at each point with e.g. F_x = F_xy + F_xz.
- */
-class SplitField{
 
 /**
  * A split field defined over a grid.
