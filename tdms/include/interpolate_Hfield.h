@@ -1,3 +1,6 @@
+#pragma once
+
+
 /* Interpolation functions for each of the H-field components.
 Decided to do with 3 separate functions for readability; as this avoids switches with a lot of cases within functions, and the interpolation scheme might be different in each direction anyway, so there is no point having a centralised function for all of them.
 

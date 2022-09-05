@@ -1,3 +1,6 @@
+#pragma once
+
+
 // CUBIC INTERPOLATION FUNCTIONS - LEAVE HERE TO PRESERVE interpolate.cpp current functionality prior to testing!
 
 /*Use cubic interpolation to interpolate between the middle 2 of 4 points

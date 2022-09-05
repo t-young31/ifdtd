@@ -1,4 +1,5 @@
-#include "complex"
+#pragma once
+#include <complex>
 #include "field.h"
 #include "grid_labels.h"
 

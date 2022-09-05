@@ -1,4 +1,6 @@
+#pragma once
 #include <fftw3.h>
+
 
 void complex_mult_vec(fftw_complex *a, fftw_complex *b, fftw_complex *c, int len);
 

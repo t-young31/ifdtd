@@ -1,3 +1,4 @@
+#pragma once
 #include "mat_io.h"
 #include "argument_parser.h"
 #include "matrix_collection.h"

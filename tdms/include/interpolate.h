@@ -1,4 +1,6 @@
+#pragma once
 # include "matrix.h"
+
 
 void interpolateFieldCentralE( double ***Ex_yee, double ***Ey_yee, double ***Ez_yee,
 			      double ***Ex    , double ***Ey    , double ***Ez    ,

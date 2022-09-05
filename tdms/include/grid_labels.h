@@ -1,3 +1,5 @@
+#pragma once
+
 
 /**
  * Grid labels hold the cartesian labels of Yee cell, in the x, y and z directions

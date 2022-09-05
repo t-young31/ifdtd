@@ -1,4 +1,6 @@
+#pragma once
 #include <complex>
+
 
 // ******************
 //  Type Definitions

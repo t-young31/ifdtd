@@ -1,4 +1,5 @@
-#include "complex"
+#pragma once
+#include <complex>
 
 double ****castMatlab4DArray(double *array, int nrows, int ncols, int nlayers, int nblocks);
 void freeCastMatlab4DArray(double ****castArray, int nlayers, int nblocks);

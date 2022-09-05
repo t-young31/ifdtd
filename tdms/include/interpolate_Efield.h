@@ -1,3 +1,6 @@
+#pragma once
+
+
 /**
  * @brief Interpolate the Ex field component to the centre of a Yee cell
  *

@@ -1,3 +1,4 @@
+#pragma once
 /**
  * A collection of functions for tensor initialisation given matlab pointers
  */
