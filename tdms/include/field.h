@@ -106,7 +106,8 @@ public:
     double ***zy = nullptr;
 
     /**
-     * Has this split field been initialised from MATLAB? If it has then use a different free
+     * Has this split field been initialised from MATLAB? If it has, then a different destructor
+     * needs to be used
      */
     bool is_matlab_allocated = false;
 
