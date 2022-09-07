@@ -22,6 +22,7 @@ public:
   void set_ptr(char c, double* ptr);
 };
 
+// TODO: docstring
 class MaterialCollection{
 protected:
   static void init_xyz_vectors(const mxArray *ptr, XYZVectors &arrays, const std::string &prefix);
@@ -34,6 +35,7 @@ public:
   XYZVectors c;
 };
 
+// TODO: docstring
 class CCollection : public CCollectionBase {
 private:
   void init_xyz_vectors(const mxArray *ptr, XYZVectors &arrays, const std::string &prefix);
@@ -45,6 +47,7 @@ public:
   explicit CCollection(const mxArray *ptr);
 };
 
+// TODO: docstring
 class CMaterial : public CCollectionBase, MaterialCollection {
 public:
   explicit CMaterial(const mxArray *ptr);
@@ -56,6 +59,7 @@ public:
   XYZVectors b;
 };
 
+// TODO: docstring
 class DCollection: public DCollectionBase{
 private:
   static void init_xyz_vectors(const mxArray *ptr, XYZVectors &arrays, const std::string &prefix);
@@ -64,6 +68,7 @@ public:
   explicit DCollection(const mxArray *ptr);
 };
 
+// TODO: docstring
 class DMaterial : public DCollectionBase, MaterialCollection {
 public:
   explicit DMaterial(const mxArray *ptr);
