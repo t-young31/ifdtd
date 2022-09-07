@@ -23,6 +23,7 @@
 #include "mesh_base.h"
 #include "numeric.h"
 #include "numerical_derivative.h"
+#include "shapes.h"
 #include "source.h"
 #include "tensor_init.h"
 #include "timer.h"
@@ -313,7 +314,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   int i, j, k, is_disp, is_cond = 0;
   int k_loc;
   int input_counter = 0;
-  int cuboid[6];
   int **vertices;
   int nvertices = 0;
   int *components;
@@ -466,8 +466,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     cuboid.initialise(prhs[input_counter], J_tot);
   }
   input_counter++;
-  /*Got phasorsurface*/
   //fprintf(stderr,"Got   phasorsurface\n");
+
   /*Get phasorinc*/
   if (mxIsDouble(prhs[input_counter])) {
     auto tmpptr = mxGetPr((mxArray *) prhs[input_counter++]);
@@ -478,9 +478,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   /*Get dimension*/
   params.set_dimension(string_in(prhs[input_counter++], "dimension"));
-
-  input_counter++;
-  /*Got dimension*/
 
   /*Get conductive_aux */
   assert_is_struct_with_n_fields(prhs[input_counter], 3, "conductive_aux");
