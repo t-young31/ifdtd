@@ -23,4 +23,7 @@ public:
     double       to_l          = 0.0;      // Time delay of pulse
     double       hwhm          = 0.0;      // Half width at half max of pulse
     PerfectlyMatchedLayer pml;             // Perfectly matched layer struct with size attributes
+    bool         exphasorsvolume = false;   // Should phasors be extracted in the whole volume?
+    bool         exphasorssurface = false;  // Should phasors be extracted on a surface?
+    bool         intphasorssurface = false; // Should phasors be extracted/interpolated?
 };
