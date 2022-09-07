@@ -1,6 +1,7 @@
 #pragma once
 #include <complex>
 #include <string>
+#include <fftw3.h>
 #include <stdexcept>
 #include "matlabio.h"
 #include "numeric.h"
@@ -293,3 +294,16 @@ public:
 
   int n_vertices(){ return vertices.n_vertices(); }
 };
+
+
+class DetectorSensitivityArrays{
+public:
+  fftw_complex* v;                      // Flat fftw vector
+  fftw_plan plan;                       // fftw plan for the setup
+  std::complex<double>** cm = nullptr;  // Column major matrix
+
+  void initialise(int n_rows, int n_cols);
+
+  ~DetectorSensitivityArrays();
+};
+
