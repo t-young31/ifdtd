@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <stdexcept>
 #include "matlabio.h"
@@ -73,4 +74,3 @@ class DMaterial : public DCollectionBase, MaterialCollection {
 public:
   explicit DMaterial(const mxArray *ptr);
 };
-
