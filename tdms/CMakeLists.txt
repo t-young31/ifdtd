@@ -80,6 +80,7 @@ set(SOURCES
     src/tensor_init.cpp
     src/timer.cpp
     src/utils.cpp
+    src/vector_collection.cpp
     matlabio/matlabio.cpp
     )
 
