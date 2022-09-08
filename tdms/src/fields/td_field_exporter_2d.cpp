@@ -9,8 +9,7 @@ void TDFieldExporter2D::allocate(int nI, int nJ) {
   array = castMatlab2DArray(mxGetPr((mxArray *) matlab_array), nI, nJ);
 }
 
-TDFieldExporter2D::~TDFieldExporter2D() {
-  freeCastMatlab2DArray(array);
+TDFieldExporter2D::~TDFieldExporter2D() { free_cast_matlab_2D_array(array);
 }
 
 
