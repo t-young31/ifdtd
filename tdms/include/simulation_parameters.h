@@ -22,8 +22,8 @@ enum RunMode{
 
 enum Dimension{
   THREE,  // Full dimensionality - compute all H and E components
-  TM,     // Transverse electric - only compute Ex, Ey, and Hz components
-  TE      // Transverse magnetic - only compute Hx, Hy, and Ez components
+  TE,     // Transverse electric - only compute Ex, Ey, and Hz components
+  TM      // Transverse magnetic - only compute Hx, Hy, and Ez components
 };
 
 class SimulationParameters{
