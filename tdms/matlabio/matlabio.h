@@ -7,7 +7,8 @@
 /**
  * Casts a 4-dimensional array such that it may be indexed according to the usual array indexing
  * scheme array[l,k,j,i].
- * @param array is a point to a matlab 4 dimensional array
+ * @param array is a pointer to a matlab 4 dimensional array
+
  * @param nrows the number of rows in the array
  * @param ncols the number of columns in the array
  * @param nlayers the number of layers, each of dimension nrows*ncols
@@ -15,12 +16,16 @@
  */
 double**** cast_matlab_4D_array(double *array, int nrows, int ncols, int nlayers, int nblocks);
 
+/**
+ * Frees the memory of a 4-dimensional array cast using cast_matlab_4D_array
+ */
 void free_cast_matlab_4D_array(double ****castArray, int nlayers, int nblocks);
 
 /**
  * Casts a 3-dimensional array such that it may be indexed according to the usual array indexing
  * scheme array[k,j,i].
- * @param array is a point to a matlab 4 dimensional array
+ * @param array is a pointer to a matlab 4 dimensional array
+
  * @param nrows the number of rows in the array
  * @param ncols the number of columns in the array
  * @param nlayers the number of layers, each of dimension nrows*ncols
@@ -43,6 +48,9 @@ T*** cast_matlab_3D_array(T *array, S nrows, S ncols, S nlayers){
   return p;
 };
 
+/**
+ * Frees the memory of a 3-dimensional array cast using cast_matlab_3D_array
+ */
 template<typename T, typename S>
 void free_cast_matlab_3D_array(T ***castArray, S nlayers){
   for(S k=0; k<nlayers; k++)
@@ -53,7 +61,8 @@ void free_cast_matlab_3D_array(T ***castArray, S nlayers){
 /**
  * Casts a 2-dimensional array such that it may be indexed according to the usual array indexing
  * scheme array[j,i].
- * @param array is a point to a matlab 4 dimensional array
+ * @param array is a pointer to a matlab 4 dimensional array
+
  * @param nrows the number of rows in the array
  * @param ncols the number of columns in the array
  */

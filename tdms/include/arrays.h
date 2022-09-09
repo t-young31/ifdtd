@@ -156,6 +156,7 @@ public:
   void initialise(const mxArray *ptr);
 };
 
+// TODO: docstring
 class Pupil: public Matrix<double>{
 public:
   Pupil() = default;
