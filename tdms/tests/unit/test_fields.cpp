@@ -84,3 +84,17 @@ TEST_CASE("Test that a split field can be constructed without allocation"){
   auto field = ElectricSplitField();
   REQUIRE(!field.xy.has_elements());
 }
+
+TEST_CASE("Test setting a component of an allocated vector field"){
+
+  auto tmp = SplitFieldComponent();    // initialisation != allocation
+  REQUIRE(!tmp.has_elements());
+
+  tmp.allocate(2, 2, 2);  // 2x2x2 tensor
+  tmp.zero();
+
+  REQUIRE(is_close(tmp[0][1][0], 0.0));
+
+  tmp[0][1][0] = 1.0;
+  REQUIRE(is_close(tmp[0][1][0], 1.0));
+}
