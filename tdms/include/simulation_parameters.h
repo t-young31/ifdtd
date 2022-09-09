@@ -1,6 +1,6 @@
 #pragma once
-#include "arrays.h"
 #include <string>
+#include "arrays.h"
 
 
 struct PerfectlyMatchedLayer {

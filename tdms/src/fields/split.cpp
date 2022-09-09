@@ -1,9 +1,6 @@
 #include <cstdlib>
 #include "field.h"
 
-
-#include <iostream>
-
 using namespace std;
 
 

@@ -7,9 +7,6 @@
 #include "utils.h"
 
 
-#include <iostream>
-
-
 class XYZTensor3D {
 public:
   double ***x = nullptr;
