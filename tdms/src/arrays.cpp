@@ -2,7 +2,6 @@
 #include <utility>
 #include "arrays.h"
 #include "globals.h"
-#include "numeric.h"
 #include "utils.h"
 
 
@@ -200,6 +199,15 @@ Tensor3D<T>::Tensor3D(T*** tensor, int n_layers, int n_cols, int n_rows){
   this->n_layers = n_layers;
   this->n_cols = n_cols;
   this->n_rows = n_rows;
+}
+
+template<>
+void Tensor3D<double>::zero() {
+  for (int k = 0; k < n_layers; k++)
+    for (int j = 0; j < n_cols; j++)
+      for (int i = 0; i < n_rows; i++) {
+        tensor[k][j][i] = 0.0;
+      }
 }
 
 Tensor3D<complex<double>> DTilde::component_in(const mxArray *ptr, const string &name,

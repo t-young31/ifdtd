@@ -74,7 +74,7 @@ TEST_CASE("Test that a split field can be allocated and zeroed"){
   auto field = ElectricSplitField(2, 1, 0);
   field.allocate_and_zero();
 
-  REQUIRE(field.xy != nullptr);
+  REQUIRE(field.xy.has_elements());
 
   // NOTE: the allocated field is actually [I_tot+1, J_tot+1, K_tot+1] in size
   for (int k = 0; k < 1; k++){
@@ -88,12 +88,8 @@ TEST_CASE("Test that a split field can be allocated and zeroed"){
   }
 }
 
-TEST_CASE("Test setting a component of a vector field"){
+TEST_CASE("Test that a split field can be constructed without allocation"){
 
-  auto arrays = XYZTensor3D();
-  construct_3d_array(&arrays.x, 1, 1, 1);
-
-  arrays['x'][0][0][0] = 1.0;
-
-  REQUIRE(is_close(arrays['x'][0][0][0], 1.0));
+  auto field = ElectricSplitField();
+  REQUIRE(!field.xy.has_elements());
 }
