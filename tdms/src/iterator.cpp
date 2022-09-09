@@ -10,7 +10,6 @@
 #include <ctime>
 #include <omp.h>
 #include "iterator.h"
-#include "numeric.h"
 #include "mesh_base.h"
 #include "numerical_derivative.h"
 #include "array_init.h"

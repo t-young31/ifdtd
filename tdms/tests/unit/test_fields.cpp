@@ -1,9 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <complex>
 #include "field.h"
-#include "numeric.h"
-
-#include "iostream"
 
 using namespace std;
 
@@ -61,12 +58,6 @@ TEST_CASE("Test magnetic field angular norm addition") {
 
   H.add_to_angular_norm(N, N_T, params);
   REQUIRE(is_close(H.angular_norm, expected));
-}
-
-TEST_CASE("Test that a split field can be constructed without allocation"){
-
-  auto field = ElectricSplitField();
-  REQUIRE(field.xy == nullptr);
 }
 
 TEST_CASE("Test that a split field can be allocated and zeroed"){
