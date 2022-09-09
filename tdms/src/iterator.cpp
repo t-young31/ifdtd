@@ -525,7 +525,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /*Got tdfdir*/
 
   auto fieldsample = FieldSample(prhs[input_counter++]);
-  auto campssample = CAmpsSample(prhs[input_counter++]);
+  auto campssample = ComplexAmplitudeSample(prhs[input_counter++]);
 
   /*Deduce the refractive index of the first layer of the multilayer, or of the bulk of homogeneous*/
   refind = sqrt(1. / (freespace_Cbx[0] / params.dt * dx) / eo);
@@ -4929,7 +4929,7 @@ void normaliseSurface(double **surface_EHr, double **surface_EHi, int **surface_
     }
 }
 
-void normaliseVertices(double **EHr, double **EHi, CAmpsSample &campssample, complex<double> Enorm, complex<double> Hnorm) {
+void normaliseVertices(double **EHr, double **EHi, ComplexAmplitudeSample &campssample, complex<double> Enorm, complex<double> Hnorm) {
 
   for (int i = 0; i < 6; i++) {
     
@@ -5064,7 +5064,7 @@ void extractPhasorsSurface(double **surface_EHr, double **surface_EHi, MagneticS
 }
 
 void extractPhasorsVertices(double **EHr, double **EHi, const MagneticSplitField &H,
-                            const ElectricSplitField &E, CAmpsSample &campssample, int n, double omega,
+                            const ElectricSplitField &E, ComplexAmplitudeSample &campssample, int n, double omega,
                             double dt, int Nt, int dimension, int J_tot, int intmethod) {
 
   int vindex, i, j, k;

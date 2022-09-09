@@ -1,6 +1,5 @@
 #include <iostream>
 #include <utility>
-#include <stdexcept>
 #include "arrays.h"
 #include "globals.h"
 #include "numeric.h"
@@ -343,7 +342,7 @@ void Vertices::initialise(const mxArray *ptr) {
     }
 }
 
-CAmpsSample::CAmpsSample(const mxArray *ptr) {
+ComplexAmplitudeSample::ComplexAmplitudeSample(const mxArray *ptr) {
 
   if (mxIsEmpty(ptr)){
     cerr << "campssample is empty" << endl;

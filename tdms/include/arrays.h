@@ -281,15 +281,15 @@ public:
 };
 
 /**
- * Complex amplitude samples
+ * Complex amplitude samples. Abbreviated to CAmpSample in MATLAB code
  */
-class CAmpsSample{
+class ComplexAmplitudeSample {
 
 public:
   Vertices vertices;                 // N x 3 matrix of indices to sample
   FieldComponentsVector components;  //
 
-  explicit CAmpsSample(const mxArray *ptr);
+  explicit ComplexAmplitudeSample(const mxArray *ptr);
 
   int n_vertices(){ return vertices.n_vertices(); }
 };
