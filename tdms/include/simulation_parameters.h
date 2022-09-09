@@ -74,7 +74,7 @@ public:
     bool         interp_mat_props = false;  // Should the material properties be interpolated?
     InterpolationMethod interp_method = cubic; // Type of surface field interpolation to do
     bool         exi_present = false;       // Is the time dependent x incident field present?
-    bool         eyi_present = false;       // Is the time dependent x incident field present?
+    bool         eyi_present = false;       // Is the time dependent y incident field present?
     PhasorInc    phasorinc;                 // Surface stride for extracting phasors
 
     void set_run_mode(std::string mode_string);
